@@ -22,7 +22,7 @@ const puppeteer = require('puppeteer');
         page.setDefaultTimeout(60000);
         await page.waitForSelector(".scanning", {hidden: true});
         await page.waitForTimeout(4000);
-        await page.screenshot({path: './images/' + rank + '.png'});
+        await page.screenshot({path: rank + '.png'});
         page.close();
 
     };
