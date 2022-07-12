@@ -20,9 +20,9 @@ const puppeteer = require('puppeteer');
             page.keyboard.press("Enter"),
         ]);
         page.setDefaultTimeout(60000);
-        await page.waitForTimeout(4000);
+        //await page.waitForTimeout(8000);
         await page.waitForSelector(".scanning", {hidden: true});
-        await page.waitForTimeout(4000);
+        await page.waitForTimeout(6000);
 
         // store the information
         const data = await page.$$eval('.reporttable tbody tr td', tds => tds.map((td) => {
@@ -52,10 +52,8 @@ const puppeteer = require('puppeteer');
             websiteObject.cookies.push(cookieObject);
             
         }
-        let rawdata = fs.readFileSync('results.json');
-        let json = JSON.parse(rawdata);
-        json[rank] = websiteObject;
-        fs.writeFile('./results.json', JSON.stringify(json, null, 2), err => {
+    
+        fs.appendFile('./results.json', JSON.stringify(websiteObject) + '\n', err => {
             if (err) {
                 console.log(err);
             } else {
@@ -67,19 +65,8 @@ const puppeteer = require('puppeteer');
 
     };
 
-
     // parse csv file
     const fname = 'urls.csv'
-    const resultObject = {};
-    const jsonresult = JSON.stringify(resultObject);
-    console.log(jsonresult);
-        fs.writeFile('./results.json', JSON.stringify(resultObject), err => {
-            if (err) {
-                console.log(err);
-            } else {
-                console.log('Successfully created JSON file!');
-            }
-        });
     const csvPipe = fs.createReadStream(fname).pipe(csv());
     csvPipe.on('data', async (row) => {
         let rank = row.Rank;
@@ -90,6 +77,5 @@ const puppeteer = require('puppeteer');
     }).on('end', () => {
         console.log('CSV file successfully processed');
     });
-    
   })();
 
