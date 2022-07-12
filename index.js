@@ -9,7 +9,7 @@ const puppeteer = require('puppeteer');
         height:1080}});
     
 
-    //function that scans the cookie using cookie sanner and store the screenshot
+    //function that scans the cookie using cookie sanner and store the information
     const scan  = async function(url, rank) {
         const page = await browser.newPage();
         await page.goto("https://cookie-script.com/cookie-scanner", {waitUntil: "domcontentloaded"}); //go to cookie scanner
@@ -20,9 +20,50 @@ const puppeteer = require('puppeteer');
             page.keyboard.press("Enter"),
         ]);
         page.setDefaultTimeout(60000);
+        await page.waitForTimeout(4000);
         await page.waitForSelector(".scanning", {hidden: true});
         await page.waitForTimeout(4000);
-        await page.screenshot({path: rank + '.png'});
+
+        // store the information
+        const data = await page.$$eval('.reporttable tbody tr td', tds => tds.map((td) => {
+            return td.innerText;
+          }));
+
+        const websiteObject = {
+            website: url,
+            cookies: [],
+        };
+        
+        for (let i = 0; i < data.length; i+=7) {
+            const cur = [];
+            for (let j = 0; j < 6; j++) {
+                const str = data[j+i];
+                cur.push(str);
+            }
+            cur[0] = cur[0].slice(0, -10);
+            
+            const cookieObject = {
+                cookieKey: cur[0],
+                domain: cur[1],
+                path: cur[2],
+                cookieType: cur[3],
+                expiration: cur[4],
+                description: cur[5],
+            }
+            websiteObject.cookies.push(cookieObject);
+            
+        }
+        let rawdata = fs.readFileSync('results.json');
+        let json = JSON.parse(rawdata);
+        json.data.push(websiteObject);
+        fs.writeFile('./results.json', JSON.stringify(json, null, 2), err => {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log('Success!');
+            }
+        });
+
         page.close();
 
     };
@@ -30,6 +71,16 @@ const puppeteer = require('puppeteer');
 
     // parse csv file
     const fname = 'urls.csv'
+    const resultObject = {data: []};
+    const jsonresult = JSON.stringify(resultObject);
+    console.log(jsonresult);
+        fs.writeFile('./results.json', JSON.stringify(resultObject), err => {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log('Successfully created JSON file!');
+            }
+        });
     const csvPipe = fs.createReadStream(fname).pipe(csv());
     csvPipe.on('data', async (row) => {
         let rank = row.Rank;
