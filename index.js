@@ -3,7 +3,7 @@ const fs = require('fs');
 const puppeteer = require('puppeteer');
 
 (async () => {
-    const browser = await puppeteer.launch({headless: false, args: [`--window-size=1920,1080`],
+    const browser = await puppeteer.launch({headless: true, args: [`--window-size=1920,1080`],
     defaultViewport: {
         width:1920,
         height:1080}});
@@ -41,7 +41,6 @@ const puppeteer = require('puppeteer');
                 cur.push(str);
             }
             cur[0] = cur[0].slice(0, -10);
-            
             const cookieObject = {
                 cookieKey: cur[0],
                 domain: cur[1],
@@ -55,12 +54,12 @@ const puppeteer = require('puppeteer');
         }
         let rawdata = fs.readFileSync('results.json');
         let json = JSON.parse(rawdata);
-        json.data.push(websiteObject);
+        json[rank] = websiteObject;
         fs.writeFile('./results.json', JSON.stringify(json, null, 2), err => {
             if (err) {
                 console.log(err);
             } else {
-                console.log('Success!');
+                console.log("Successfully crawled " + url)
             }
         });
 
@@ -71,7 +70,7 @@ const puppeteer = require('puppeteer');
 
     // parse csv file
     const fname = 'urls.csv'
-    const resultObject = {data: []};
+    const resultObject = {};
     const jsonresult = JSON.stringify(resultObject);
     console.log(jsonresult);
         fs.writeFile('./results.json', JSON.stringify(resultObject), err => {
